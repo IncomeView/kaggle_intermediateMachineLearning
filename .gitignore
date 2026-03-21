@@ -1,0 +1,17 @@
+# Ambientes virtuais
+envs/
+venv/
+.venv/
+
+# Dados
+data/raw/
+data/processed/
+
+# Artefatos
+models/
+outputs/
+docs/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_out.ipynb
