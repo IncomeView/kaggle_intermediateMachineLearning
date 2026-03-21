@@ -12,7 +12,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ML/kaggle/intermediate-ml
+        working-directory: .
 
     steps:
     - name: Checkout repository
