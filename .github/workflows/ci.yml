@@ -27,10 +27,22 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install kaggle papermill
+
+    - name: Configure Kaggle credentials
+      run: |
+        mkdir -p ~/.kaggle
+        echo "{\"username\":\"${{ secrets.KAGGLE_USERNAME }}\",\"key\":\"${{ secrets.KAGGLE_KEY }}\"}" > ~/.kaggle/kaggle.json
+        chmod 600 ~/.kaggle/kaggle.json
+
+    - name: Download Kaggle dataset
+      run: |
+        mkdir -p data/raw
+        kaggle competitions download -c house-prices-advanced-regression-techniques -p data/raw
+        unzip data/raw/house-prices-advanced-regression-techniques.zip -d data/raw
 
     - name: Execute notebook 01
       run: |
-        pip install papermill
         papermill notebooks/01_missing_values.ipynb \
                  notebooks/01_missing_values_out.ipynb
 
