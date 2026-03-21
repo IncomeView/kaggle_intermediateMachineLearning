@@ -13,7 +13,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0   # necessário para ler tags
+          fetch-depth: 0
 
       - name: Configurar Python
         uses: actions/setup-python@v4
@@ -24,15 +24,23 @@ jobs:
         run: |
           pip install -r requirements.txt
 
+      - name: Baixar dados do Kaggle
+        env:
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          mkdir -p data/raw
+          kaggle competitions download -c house-prices-advanced-regression-techniques -p data/raw
+          unzip -o data/raw/house-prices-advanced-regression-techniques.zip -d data/raw
+
       - name: Gerar arquivo VERSION
         run: |
           python scripts/write_version.py
 
-      - name: Executar notebooks (opcional)
+      - name: Executar notebooks
         run: |
           papermill notebooks/01_missing_values.ipynb notebooks/01_missing_values_out.ipynb
           papermill notebooks/02_categorical_variables.ipynb notebooks/02_categorical_variables_out.ipynb
-          papermill notebooks/03_*.ipynb notebooks/03_*_out.ipynb
 
       - name: Upload de artefatos versionados
         uses: actions/upload-artifact@v4
