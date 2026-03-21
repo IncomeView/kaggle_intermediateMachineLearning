@@ -22,6 +22,14 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: "3.12"
+  
+    - name: Debug secrets
+    run: |
+      echo "USERNAME length: ${#KAGGLE_USERNAME}"
+      echo "KEY length: ${#KAGGLE_KEY}"
+    env:
+      KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+      KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
 
     - name: Install dependencies
       run: |
