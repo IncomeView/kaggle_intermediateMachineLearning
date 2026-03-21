@@ -1,0 +1,45 @@
+name: CD - Deploy de Artefatos
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0   # necessário para ler tags
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependências
+        run: |
+          pip install -r requirements.txt
+
+      - name: Gerar arquivo VERSION
+        run: |
+          python scripts/write_version.py
+
+      - name: Executar notebooks (opcional)
+        run: |
+          papermill notebooks/01_missing_values.ipynb notebooks/01_missing_values_out.ipynb
+          papermill notebooks/02_categorical_variables.ipynb notebooks/02_categorical_variables_out.ipynb
+          papermill notebooks/03_*.ipynb notebooks/03_*_out.ipynb
+
+      - name: Upload de artefatos versionados
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-${{ github.ref_name }}
+          path: |
+            VERSION
+            outputs/
+            models/
+            notebooks/*_out.ipynb
