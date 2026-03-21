@@ -24,10 +24,17 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Baixar dados do Kaggle
+      - name: Instalar Kaggle CLI
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+        run: |
+          pip install kaggle
+          mkdir -p ~/.kaggle
+          echo "{\"username\":\"${KAGGLE_USERNAME}\",\"key\":\"${KAGGLE_KEY}\"}" > ~/.kaggle/kaggle.json
+          chmod 600 ~/.kaggle/kaggle.json
+
+      - name: Baixar dados do Kaggle
         run: |
           mkdir -p data/raw
           kaggle competitions download -c house-prices-advanced-regression-techniques -p data/raw
