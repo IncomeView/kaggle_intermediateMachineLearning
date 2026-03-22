@@ -10,8 +10,10 @@ data/processed/
 # Artefatos
 models/
 outputs/
-docs/
+#docs/
 
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb_out.ipynb
+__pycache__/
+*.pyc
