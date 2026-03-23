@@ -10,6 +10,7 @@ data/processed/
 # Artefatos
 models/
 outputs/
+notebooks/notebooks_model.md
 #docs/
 
 # Jupyter

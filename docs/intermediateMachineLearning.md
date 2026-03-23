@@ -882,14 +882,15 @@ Este capítulo completa o entendimento de pré‑processamento apresentado no cu
 <details>
 <br>
 
-Nos capítulos anteriores, tratamos **Missing Values** e **Categorical Variables** separadamente.  
-Na prática, porém, essas etapas fazem parte de um **único fluxo de pré‑processamento**.
+Nos capítulos anteriores, tratamos **Missing Values** e **Categorical Variables** como problemas independentes.  
+Na prática, porém, essas etapas fazem parte de um **único fluxo de preparação dos dados**.
 
-O objetivo deste capítulo é introduzir o conceito de **Pipelines**, que permitem:
-- organizar etapas de pré‑processamento;
-- garantir consistência entre treino e validação;
-- reduzir erros comuns;
-- preparar o código para uso em produção.
+À medida que o pré‑processamento se torna mais complexo, cresce também o risco de:
+- aplicar transformações diferentes no treino e na validação;
+- esquecer etapas intermediárias;
+- introduzir erros difíceis de detectar.
+
+O objetivo deste capítulo é introduzir o conceito de **Pipelines**, que permitem organizar esse fluxo de forma **consistente, segura e reproduzível**.
 
 </details>
 
@@ -900,20 +901,38 @@ O objetivo deste capítulo é introduzir o conceito de **Pipelines**, que permit
 <details>
 <br>
 
-Antes de usar pipelines, o fluxo típico envolve várias etapas manuais:
+Antes de usar pipelines, o fluxo típico de Machine Learning envolve várias etapas manuais:
 
-- tratar missing values;
-- aplicar encoding;
+- tratar valores ausentes;
+- aplicar encoding em variáveis categóricas;
 - treinar o modelo;
-- repetir tudo para o validation set.
+- repetir exatamente as mesmas transformações no validation set.
+
+Exemplo conceitual de fluxo manual:
+
+~~~python
+# Imputação manual
+imputer.fit(X_train)
+X_train_imputed = imputer.transform(X_train)
+X_valid_imputed = imputer.transform(X_valid)
+
+# Encoding manual
+encoder.fit(X_train_imputed)
+X_train_encoded = encoder.transform(X_train_imputed)
+X_valid_encoded = encoder.transform(X_valid_imputed)
+
+# Treino do modelo
+model.fit(X_train_encoded, y_train)
+~~~
 
 Esse processo é:
 - repetitivo;
 - propenso a erros;
-- difícil de manter.
+- difícil de manter;
+- pouco confiável à medida que o projeto cresce.
 
 💡 **Problema comum:**  
-Esquecer de aplicar exatamente as mesmas transformações no treino e na validação.
+Aplicar corretamente o pré‑processamento no treino, mas esquecer ou alterar alguma etapa na validação.
 
 </details>
 
@@ -929,64 +948,75 @@ Um **Pipeline** é uma forma de encadear várias etapas de processamento em um �
 No scikit‑learn, um pipeline:
 - recebe dados brutos como entrada;
 - aplica transformações em sequência;
-- entrega dados prontos para o modelo.
+- entrega dados prontos para o modelo;
+- garante que o mesmo fluxo seja aplicado no treino, validação e teste.
 
 Conceitualmente, um pipeline representa:
 
 Raw Data → Preprocessing → Model → Predictions
 
-Código
+📌 **Observação importante:**  
+Um pipeline **não corrige automaticamente erros conceituais nos dados**.  
+Ele apenas garante que **as transformações definidas** sejam aplicadas de forma consistente.
 
 </details>
 
 ---
 
-## 🟨 4.4. Componentes de um Pipeline
+## ⚠️ 4.4. O que Pipelines NÃO fazem
 
 <details>
 <br>
 
-Um pipeline é composto por **steps**, cada um com um nome e um transformador ou modelo.
+Apesar de suas vantagens, pipelines não substituem decisões fundamentais do cientista de dados.
 
-Exemplo conceitual:
+Pipelines **não**:
+- identificam automaticamente variáveis categóricas;
+- corrigem tipos de dados inconsistentes;
+- escolhem o encoding adequado;
+- evitam erros se as colunas forem mal definidas.
 
-- imputação de missing values
-- encoding de variáveis categóricas
-- modelo de regressão
+Essas decisões continuam sendo responsabilidade de quem constrói o modelo.
 
-Cada etapa é aplicada automaticamente na ordem definida.
+Esse ponto é crucial:  
+pipelines **organizam decisões**, mas **não tomam decisões por você**.
 
 </details>
 
 ---
 
-## 🟪 4.5. Por que o curso introduz Pipelines
+## 🟨 4.5. Componentes de um Pipeline
 
 <details>
 <br>
 
-O Kaggle introduz pipelines para resolver problemas vistos nos capítulos anteriores:
+Um pipeline é composto por **steps**, cada um com:
+- um nome;
+- um objeto responsável por transformar ou modelar os dados.
 
-- garantir que o mesmo `SimpleImputer` seja usado no treino e na validação;
-- evitar vazamento de dados;
-- reduzir código duplicado;
-- tornar o fluxo mais confiável.
+Cada step pode ser:
+- um **Transformer** (ex.: imputadores, encoders);
+- um **Estimator** final (ex.: modelos de regressão).
 
-💡 **Mensagem central do curso:**  
-Pipelines ajudam a transformar notebooks experimentais em código mais robusto.
+Regras importantes:
+- todos os steps intermediários implementam `fit()` e `transform()`;
+- o último step implementa `fit()` e `predict()`.
+
+Essa estrutura garante que:
+- o pré‑processamento seja reaplicado corretamente;
+- o modelo nunca veja dados “crus”;
+- o fluxo seja reproduzível.
 
 </details>
 
 ---
 
-## 🟫 4.6. Exemplo conceitual de Pipeline
+## 🟪 4.6. Exemplo básico de Pipeline
 
 <details>
 <br>
 
-O curso apresenta pipelines como uma forma de unir pré‑processamento e modelo.
-
-Exemplo conceitual (simplificado):
+Exemplo conceitual simples de pipeline:
 
 ~~~python
 from sklearn.pipeline import Pipeline
@@ -999,27 +1029,91 @@ pipeline = Pipeline(steps=[
 ])
 ~~~
 
-Nesse exemplo:
-- o imputador trata missing values;
-- o modelo recebe dados já tratados;
-- o mesmo fluxo é usado no treino e na validação.
+### O que esse pipeline faz:
+- substitui valores ausentes pela média;
+- treina um modelo de Random Forest;
+- garante que o mesmo imputador seja usado no treino e na validação.
+
+Esse exemplo ilustra a ideia central:  
+**pré‑processamento e modelo passam a ser uma única unidade lógica**.
 
 </details>
 
 ---
 
-## 🟦 4.7. Benefícios práticos dos Pipelines
+## 🟫 4.7. Pipelines com múltiplas transformações
 
 <details>
 <br>
 
-Usar pipelines traz vantagens claras:
+Em problemas reais, o pré‑processamento costuma envolver mais de uma etapa.
+
+Exemplo conceitual com múltiplos transformers:
+
+~~~python
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
+
+categorical_pipeline = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('encoder', OneHotEncoder(handle_unknown='ignore'))
+])
+~~~
+
+### O que esse pipeline faz:
+- preenche valores ausentes em variáveis categóricas;
+- aplica One‑Hot Encoding;
+- garante consistência entre treino e validação.
+
+Esse tipo de pipeline é frequentemente usado dentro de um `ColumnTransformer`.
+
+</details>
+
+---
+
+## 🟦 4.8. Pipelines e ColumnTransformer
+
+<details>
+<br>
+
+Quando o dataset possui variáveis numéricas e categóricas, usamos `ColumnTransformer` para aplicar transformações diferentes a colunas diferentes.
+
+Exemplo conceitual:
+
+~~~python
+from sklearn.compose import ColumnTransformer
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', SimpleImputer(strategy='mean'), numerical_cols),
+        ('cat', categorical_pipeline, categorical_cols)
+    ]
+)
+~~~
+
+Esse objeto pode então ser integrado ao pipeline final com o modelo.
+
+💡 **Ideia central:**  
+Todo o pré‑processamento fica definido em um único lugar.
+
+</details>
+
+---
+
+## 🟩 4.9. Benefícios práticos dos Pipelines
+
+<details>
+<br>
+
+O uso de pipelines traz vantagens claras:
 
 - menos código repetido;
 - menor chance de erro;
 - maior clareza do fluxo;
 - facilidade de manutenção;
-- preparação para produção.
+- preparação para produção;
+- integração natural com Cross‑Validation.
 
 Esses benefícios se tornam ainda mais importantes conforme o projeto cresce.
 
@@ -1027,52 +1121,326 @@ Esses benefícios se tornam ainda mais importantes conforme o projeto cresce.
 
 ---
 
-## 🟩 4.8. Glossário Técnico
+## 🟪 4.10. Glossário Técnico
 
 <details>
 <br>
 
-- **Pipeline** — encadeamento de etapas de pré‑processamento e modelagem.
-- **Step** — etapa individual dentro de um pipeline.
-- **Transformer** — objeto que transforma dados (ex.: imputador, encoder).
-- **Estimator** — modelo que aprende a partir dos dados.
-- **fit()** — ajusta o pipeline aos dados de treino.
+- **Pipeline** — encadeamento de etapas de pré‑processamento e modelagem.  
+- **Step** — etapa individual dentro de um pipeline.  
+- **Transformer** — objeto que transforma dados.  
+- **Estimator** — modelo que aprende a partir dos dados.  
+- **fit()** — ajusta o pipeline aos dados de treino.  
+- **transform()** — aplica transformações aos dados.  
 - **predict()** — gera previsões usando o pipeline ajustado.
 
 </details>
 
 ---
 
-## 🧾 4.9. Referência Rápida — Conceitos‑Chave
+## 🧾 4.11. Referência Rápida — Conceitos‑Chave
 
 <details>
 <br>
 
-- Pipelines garantem consistência entre treino e validação.
-- Transformações são aplicadas automaticamente na ordem correta.
-- O mesmo pipeline pode ser usado em produção.
-- Pipelines reduzem risco de data leakage.
+- Pipelines organizam o fluxo de Machine Learning.
+- Garantem consistência entre treino e validação.
+- Reduzem risco de *data leakage*.
+- Facilitam manutenção e produção.
+- Não substituem entendimento dos dados.
 
 </details>
 
 ---
 
-## 🟧 4.10. Conclusão do Capítulo
+## 🟧 4.12. Conclusão do Capítulo
 
 <details>
 <br>
 
-Este capítulo introduziu o conceito de **Pipelines** e seu papel no fluxo de Machine Learning.
+Este capítulo apresentou **Pipelines** como uma ferramenta essencial para organizar fluxos de Machine Learning.
 
-Nos próximos estudos, o pipeline será usado para:
+Pipelines permitem:
 - integrar imputação e encoding;
-- simplificar o código;
-- tornar o processo mais confiável.
+- reduzir erros manuais;
+- tornar o código mais confiável;
+- preparar o modelo para validações mais robustas.
 
-Após estudar a lição correspondente no Kaggle, este capítulo pode ser expandido com exemplos completos e comparações de MAE.
+No próximo capítulo, veremos como pipelines se integram naturalmente com **Cross‑Validation**, permitindo avaliações mais estáveis e realistas do desempenho do modelo.
 
 </details>
 
 </details>
+<br>
 
 
+# 📘 Capítulo 5 — Cross‑Validation
+
+<details>
+<br>
+
+> ### *Machine Learning Intermediário — Um Guia Prático e Comentado*
+
+---
+
+## 🟦 5.1. Introdução
+
+<details>
+<br>
+
+Machine Learning é um processo **iterativo**.
+
+Ao longo do desenvolvimento de um modelo, fazemos diversas escolhas:
+- quais variáveis utilizar;
+- qual modelo escolher;
+- quais parâmetros ajustar;
+- como preparar os dados.
+
+Até agora, essas decisões foram avaliadas usando um **validation set** fixo.  
+Embora essa abordagem seja simples e eficiente, ela possui limitações importantes.
+
+O objetivo deste capítulo é introduzir **Cross‑Validation**, uma técnica que fornece **medidas mais confiáveis do desempenho do modelo**, reduzindo o impacto do acaso.
+
+</details>
+
+---
+
+## 🟩 5.2. Avaliação com Validation Set — Revisão Rápida
+
+<details>
+<br>
+
+No fluxo tradicional, o dataset é dividido em:
+- conjunto de treino;
+- conjunto de validação.
+
+Exemplo conceitual:
+
+~~~python
+from sklearn.model_selection import train_test_split
+
+X_train, X_valid, y_train, y_valid = train_test_split(
+    X, y, train_size=0.8, random_state=0
+)
+~~~
+
+O modelo é treinado em `X_train` e avaliado em `X_valid`.
+
+Essa abordagem é:
+- simples;
+- rápida;
+- fácil de interpretar.
+
+Porém, ela depende **fortemente** de quais linhas caíram no validation set.
+
+</details>
+
+---
+
+## 🟧 5.3. O problema do Validation Set Único
+
+<details>
+<br>
+
+Considere um dataset com 5000 linhas:
+- 4000 usadas para treino;
+- 1000 usadas para validação.
+
+O MAE obtido depende de:
+- quais 1000 linhas foram escolhidas;
+- características específicas dessas linhas;
+- variações aleatórias do dataset.
+
+💡 **Problema central:**  
+Um modelo pode parecer bom ou ruim **por sorte**, e não por qualidade real.
+
+Esse efeito é ainda mais forte quando:
+- o dataset é pequeno;
+- muitas decisões estão sendo comparadas;
+- diferenças pequenas de MAE importam.
+
+</details>
+
+---
+
+## 🟨 5.4. O que é Cross‑Validation
+
+<details>
+<br>
+
+**Cross‑Validation** é uma técnica que avalia o modelo **em múltiplas divisões dos dados**, em vez de apenas uma.
+
+A forma mais comum é o **K‑Fold Cross‑Validation**.
+
+O processo funciona assim:
+1. O dataset é dividido em *K* partes (*folds*).
+2. Em cada experimento:
+   - uma parte é usada como validação;
+   - as demais são usadas para treino.
+3. O processo se repete até que cada fold tenha sido usado como validação.
+
+Dessa forma:
+- todos os dados participam da validação;
+- obtemos múltiplas estimativas de MAE;
+- a avaliação se torna mais estável.
+
+</details>
+
+---
+
+## 🟪 5.5. Cross‑Validation na prática com scikit‑learn
+
+<details>
+<br>
+
+O scikit‑learn fornece a função `cross_val_score()` para executar Cross‑Validation.
+
+Exemplo conceitual:
+
+~~~python
+from sklearn.model_selection import cross_val_score
+
+scores = -1 * cross_val_score(
+    my_pipeline,
+    X,
+    y,
+    cv=5,
+    scoring='neg_mean_absolute_error'
+)
+~~~
+
+### O que esse código faz:
+- divide os dados em 5 folds (`cv=5`);
+- treina o pipeline 5 vezes;
+- avalia o MAE em cada fold;
+- retorna um array com 5 valores de MAE.
+
+📌 **Observação importante:**  
+O scikit‑learn usa métricas negativas por convenção.  
+Por isso multiplicamos por `-1` para obter MAE positivo.
+
+</details>
+
+---
+
+## 🟫 5.6. Interpretando os resultados da Cross‑Validation
+
+<details>
+<br>
+
+Após executar a Cross‑Validation, normalmente analisamos:
+
+~~~python
+scores
+scores.mean()
+~~~
+
+- `scores` mostra o MAE de cada fold;
+- `scores.mean()` fornece uma estimativa média do desempenho.
+
+Se os valores entre os folds forem:
+- **próximos** → modelo estável;
+- **muito diferentes** → modelo sensível à divisão dos dados.
+
+💡 **Lição importante:**  
+Cross‑Validation não apenas mede desempenho — ela revela **estabilidade**.
+
+</details>
+
+---
+
+## 🟦 5.7. Cross‑Validation e Pipelines
+
+<details>
+<br>
+
+Cross‑Validation funciona melhor quando combinada com **Pipelines**.
+
+Com pipelines:
+- o pré‑processamento é reaplicado corretamente em cada fold;
+- não há vazamento de dados;
+- o código fica mais simples e seguro.
+
+Sem pipelines, seria necessário:
+- repetir imputação manualmente;
+- garantir consistência entre folds;
+- evitar erros difíceis de detectar.
+
+💡 **Mensagem central do Kaggle:**  
+Pipelines tornam a Cross‑Validation prática e confiável.
+
+</details>
+
+---
+
+## 🟩 5.8. Quando usar Cross‑Validation
+
+<details>
+<br>
+
+Use Cross‑Validation quando:
+- o dataset é pequeno ou médio;
+- você está comparando muitas alternativas;
+- pequenas diferenças de MAE importam;
+- o custo computacional é aceitável.
+
+Use um validation set simples quando:
+- o dataset é grande;
+- o modelo é pesado;
+- os resultados já são estáveis.
+
+Não existe um limite rígido — a decisão depende do contexto.
+
+</details>
+
+---
+
+## 🟪 5.9. Glossário Técnico
+
+<details>
+<br>
+
+- **Cross‑Validation** — técnica de avaliação baseada em múltiplas divisões dos dados.
+- **Fold** — subconjunto usado como validação em um experimento.
+- **K‑Fold** — forma comum de Cross‑Validation com *K* divisões.
+- **cross_val_score()** — função do scikit‑learn para executar Cross‑Validation.
+- **scoring** — métrica usada para avaliar o modelo.
+- **MAE** — Mean Absolute Error.
+
+</details>
+
+---
+
+## 🧾 5.10. Referência Rápida — Conceitos‑Chave
+
+<details>
+<br>
+
+- Cross‑Validation reduz o impacto do acaso.
+- Fornece avaliações mais confiáveis.
+- Funciona melhor com pipelines.
+- A média dos folds é usada para comparação.
+- Revela estabilidade do modelo.
+
+</details>
+
+---
+
+## 🟧 5.11. Conclusão do Capítulo
+
+<details>
+<br>
+
+Este capítulo apresentou **Cross‑Validation** como uma evolução natural do uso de validation sets.
+
+Com Cross‑Validation:
+- decisões são baseadas em múltiplos experimentos;
+- a avaliação do modelo se torna mais robusta;
+- o risco de conclusões enganosas diminui.
+
+No próximo capítulo, o curso introduz **XGBoost**, um modelo mais avançado, que se beneficia diretamente de pipelines e validação adequada.
+
+</details>
+
+</details>
+<br>
