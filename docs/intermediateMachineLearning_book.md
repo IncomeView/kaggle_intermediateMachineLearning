@@ -1,4 +1,11 @@
-# 📊 Machine Learning Intermediário — Um Guia Prático e Comentado
+# 📊 Intermediate Machine Learning — Companion Book
+### Teoria, explicações aprofundadas e guia de estudo para o curso Kaggle Intermediate ML
+
+> Este livro acompanha o curso Kaggle Intermediate Machine Learning.
+> Ele fornece explicações conceituais, exemplos detalhados e uma visão estruturada
+> de cada capítulo, servindo como material teórico complementar aos notebooks práticos.
+
+---
 <br>
 
 # 📘 Capítulo 1 — Introduction
