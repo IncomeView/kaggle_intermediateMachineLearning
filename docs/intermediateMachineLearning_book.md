@@ -1280,7 +1280,15 @@ Esse efeito é ainda mais forte quando:
 A forma mais comum é o **K‑Fold Cross‑Validation**.
 
 O processo funciona assim:
-1. O dataset é dividido em *K* partes (*folds*).
+1. O dataset é dividido em *K* partes (*folds*)
+    - Exemplo visual (K=5):
+        - Fold 1 → treino: [2,3,4,5] | validação: [1]
+        - Fold 2 → treino: [1,3,4,5] | validação: [2]
+        - Fold 3 → treino: [1,2,4,5] | validação: [3]
+        - Fold 4 → treino: [1,2,3,5] | validação: [4]
+        - Fold 5 → treino: [1,2,3,4] | validação: [5]
+
+    - Cada linha do dataset é usada exatamente uma vez como validação.
 2. Em cada experimento:
    - uma parte é usada como validação;
    - as demais são usadas para treino.
@@ -1345,6 +1353,13 @@ scores.mean()
 - `scores` mostra o MAE de cada fold;
 - `scores.mean()` fornece uma estimativa média do desempenho.
 
+<br>
+
+>📌 **Por que usamos a média dos MAEs?**  
+Porque ela representa o desempenho esperado do modelo em dados novos, reduzindo o impacto de variações entre folds individuais.
+
+<br>
+
 Se os valores entre os folds forem:
 - **próximos** → modelo estável;
 - **muito diferentes** → modelo sensível à divisão dos dados.
@@ -1398,6 +1413,13 @@ Use um validation set simples quando:
 
 Não existe um limite rígido — a decisão depende do contexto.
 
+<br>
+
+> 📌 **Custo computacional:**  
+Cross‑Validation treina o modelo várias vezes (uma por fold).  
+Por isso, embora seja mais precisa, também é mais lenta.  
+A decisão entre CV e holdout envolve equilibrar precisão e custo.
+
 </details>
 
 ---
@@ -1447,7 +1469,480 @@ Com Cross‑Validation:
 
 No próximo capítulo, o curso introduz **XGBoost**, um modelo mais avançado, que se beneficia diretamente de pipelines e validação adequada.
 
+<br>
+
+> No exercício desta lesson, você aplicará Cross‑Validation para escolher o melhor valor de `n_estimators` em um modelo Random Forest, reforçando o uso prático da técnica para tomada de decisão baseada em métricas.
+
+
 </details>
 
 </details>
 <br>
+
+
+# # 📘 Capítulo 6 — XGBoost
+
+<details>
+<br>
+
+> ### *Machine Learning Intermediário — Um Guia Prático e Comentado*
+
+---
+
+## 🟦 6.1. Introdução
+
+<details>
+<br>
+
+Nos capítulos anteriores, aprendemos a:
+
+- tratar missing values,  
+- lidar com variáveis categóricas,  
+- organizar o fluxo com pipelines,  
+- avaliar modelos com Cross‑Validation.
+
+Essas técnicas formam a base para trabalhar com modelos mais avançados.
+
+Neste capítulo, introduzimos o **XGBoost**, um dos algoritmos mais poderosos e populares para dados tabulares. Ele domina competições do Kaggle e é amplamente utilizado em aplicações reais.
+
+O objetivo aqui é:
+
+- entender o que é gradient boosting,  
+- compreender como o XGBoost implementa essa técnica,  
+- aprender os principais hiperparâmetros,  
+- entender o papel de *early stopping*,  
+- preparar o leitor para o exercício da lesson.
+
+</details>
+
+---
+
+## 🟩 6.2. Revisão — Por que Random Forest não é suficiente?
+
+<details>
+<br>
+
+Até agora, usamos **Random Forest**, um método baseado em:
+
+- treinar várias árvores independentes,  
+- combinar suas previsões por média.
+
+Essa abordagem reduz variância e melhora estabilidade, mas tem limitações:
+
+- cada árvore é treinada **isoladamente**,  
+- não há aprendizado sequencial,  
+- o modelo não corrige erros anteriores.
+
+Para superar isso, surge uma nova classe de modelos:  
+**os métodos de boosting**.
+
+</details>
+
+---
+
+## 🟧 6.3. O problema que o Boosting resolve
+
+<details>
+<br>
+
+Modelos simples (como árvores pequenas) cometem erros previsíveis.  
+O boosting explora isso:
+
+> **em vez de treinar vários modelos independentes, ele treina modelos sequenciais, onde cada novo modelo tenta corrigir os erros do anterior.**
+
+Isso cria um processo iterativo:
+
+1. Treina um modelo inicial (fraco).  
+2. Avalia os erros.  
+3. Treina um novo modelo focado nesses erros.  
+4. Repete o processo várias vezes.  
+5. Combina todos os modelos em um ensemble final.
+
+Esse processo é chamado de **gradient boosting**.
+
+Exemplo conceitual — como cada árvore corrige o erro da anterior:
+
+~~~python
+# Previsão inicial (modelo fraco)
+pred_1 = tree_1.predict(X)
+
+# Erro residual
+residual_1 = y - pred_1
+
+# Segunda árvore tenta corrigir o erro
+pred_2 = tree_2.predict(X)
+
+# Nova previsão combinada
+final_pred = pred_1 + pred_2
+~~~
+
+Esse exemplo ilustra a lógica fundamental do boosting:  
+cada novo modelo tenta corrigir o erro deixado pelo anterior.
+
+
+</details>
+
+---
+
+## 🟨 6.4. O que é Gradient Boosting?
+
+<details>
+<br>
+
+Gradient Boosting é um método iterativo que:
+
+1. Começa com um modelo simples.  
+2. Calcula o erro (loss).  
+3. Usa o gradiente desse erro para ajustar o próximo modelo.  
+4. Adiciona o novo modelo ao ensemble.  
+5. Repete o ciclo.
+
+Exemplo conceitual do ciclo de boosting:
+
+~~~python
+for step in range(K):
+    # 1. Previsão atual do ensemble
+    pred = ensemble.predict(X)
+
+    # 2. Cálculo do erro residual
+    residual = y - pred
+
+    # 3. Treinar nova árvore para corrigir o residual
+    new_tree.fit(X, residual)
+
+    # 4. Adicionar ao ensemble
+    ensemble.add(new_tree)
+~~~
+
+Esse pseudo‑código mostra como o boosting ajusta o modelo de forma iterativa.
+
+
+Cada novo modelo:
+
+- é treinado para reduzir o erro residual,  
+- contribui com uma pequena correção,  
+- melhora progressivamente o desempenho.
+
+📌 **Intuição:**  
+Cada árvore tenta corrigir o que a anterior errou.
+
+</details>
+
+---
+
+## 🟪 6.5. O que é XGBoost?
+
+<details>
+<br>
+
+**XGBoost (Extreme Gradient Boosting)** é uma implementação otimizada de gradient boosting, com foco em:
+
+- velocidade,  
+- desempenho,  
+- paralelização,  
+- regularização,  
+- controle fino de hiperparâmetros.
+
+Ele é amplamente usado porque:
+
+- funciona muito bem em dados tabulares,  
+- escala para grandes datasets,  
+- possui mecanismos avançados de tuning,  
+- oferece *early stopping*,  
+- é fácil de usar via API do scikit‑learn.
+
+No Kaggle, é comum que modelos vencedores usem XGBoost ou LightGBM.
+
+</details>
+
+---
+
+## 🟫 6.6. Exemplo básico — Treinando um modelo XGBoost
+
+<details>
+<br>
+
+O Kaggle utiliza a classe `XGBRegressor`, que segue a API do scikit‑learn.
+
+~~~python
+from xgboost import XGBRegressor
+
+my_model = XGBRegressor()
+my_model.fit(X_train, y_train)
+~~~
+
+Depois, avaliamos com MAE:
+
+~~~python
+from sklearn.metrics import mean_absolute_error
+
+preds = my_model.predict(X_valid)
+mean_absolute_error(preds, y_valid)
+~~~
+
+Esse exemplo mostra o fluxo básico, mas ainda não explora os hiperparâmetros importantes.
+
+Podemos inspecionar os hiperparâmetros disponíveis:
+
+~~~python
+model = XGBRegressor()
+model.get_params()
+~~~
+
+Isso evidencia que o XGBoost possui muitos parâmetros ajustáveis, reforçando a importância do tuning.
+
+
+</details>
+
+---
+
+## 🟦 6.7. Hiperparâmetros essenciais do XGBoost
+
+<details>
+<br>
+
+O XGBoost possui muitos hiperparâmetros, mas a lesson foca nos mais importantes:
+
+---
+
+### 🔹 6.7.1. `n_estimators` — número de ciclos de boosting
+
+Define quantas árvores serão adicionadas ao ensemble.
+
+- valores baixos → underfitting  
+- valores altos → overfitting  
+- valores típicos: **100 a 1000**
+
+Exemplo:
+
+~~~python
+my_model = XGBRegressor(n_estimators=500)
+~~~
+
+Exemplos de valores comuns:
+
+~~~python
+XGBRegressor(n_estimators=100)
+XGBRegressor(n_estimators=500)
+XGBRegressor(n_estimators=1000)
+~~~
+
+
+---
+
+### 🔹 6.7.2. `early_stopping_rounds` — parada antecipada
+
+Permite interromper o treinamento quando o modelo **para de melhorar**.
+
+~~~python
+my_model.fit(
+    X_train, y_train,
+    early_stopping_rounds=5,
+    eval_set=[(X_valid, y_valid)],
+    verbose=False
+)
+~~~
+
+Como funciona:
+
+- monitora o desempenho no conjunto de validação,  
+- se o modelo piorar por *N* rodadas consecutivas, ele para,  
+- evita overfitting,  
+- economiza tempo.
+
+---
+
+### ⚠️ Nota importante sobre versões modernas do XGBoost
+
+> O código desta lesson segue a API usada no Kaggle, baseada no **XGBoost 1.x**, onde o parâmetro `early_stopping_rounds` funciona diretamente no método `.fit()` da classe `XGBRegressor`.  
+>  
+> Entretanto, nas versões mais recentes do XGBoost (**2.x e 3.x**), esse parâmetro foi **removido** da API scikit‑learn.  
+>  
+> Se você estiver usando Python 3.11+ ou XGBoost 2.x/3.x, o código acima resultará em:
+>
+> ```
+> TypeError: XGBModel.fit() got an unexpected keyword argument 'early_stopping_rounds'
+> ```
+>
+> Nessas versões, o *early stopping* só funciona via **API nativa**:
+>
+> ```python
+> import xgboost as xgb
+> model = xgb.train(
+>     params,
+>     dtrain,
+>     num_boost_round=500,
+>     evals=[(dvalid, "valid")],
+>     early_stopping_rounds=5
+> )
+> ```
+>
+> O restante do capítulo continua válido, mas o código de *early stopping* pode precisar ser adaptado ao seu ambiente.
+
+<br>
+
+---
+
+### 🔹 6.7.3. `learning_rate` — tamanho do passo
+
+Controla quanto cada árvore contribui para o ensemble.
+
+- valores pequenos → mais árvores, mais precisão  
+- valores grandes → aprendizado rápido, risco de overfitting  
+
+Exemplo:
+
+~~~python
+my_model = XGBRegressor(
+    n_estimators=1000,
+    learning_rate=0.05
+)
+~~~
+
+Comparação de diferentes learning rates:
+
+~~~python
+XGBRegressor(learning_rate=0.3)   # rápido, arriscado
+XGBRegressor(learning_rate=0.1)   # padrão
+XGBRegressor(learning_rate=0.03)  # lento, mais preciso
+~~~
+
+
+---
+
+### 🔹 6.7.4. `n_jobs` — paralelização
+
+Define quantos núcleos de CPU usar.
+
+~~~python
+my_model = XGBRegressor(n_jobs=4)
+~~~
+
+Não melhora a qualidade do modelo — apenas a velocidade.
+
+</details>
+
+---
+
+## 🟩 6.8. Integração com o fluxo do curso
+
+<details>
+<br>
+
+O XGBoost se encaixa naturalmente no fluxo que construímos:
+
+- Missing Values → XGBoost lida bem com imputação simples  
+- Categorical Variables → usamos apenas colunas numéricas  
+- Pipelines → podem ser usados, mas não são obrigatórios  
+- Cross‑Validation → funciona perfeitamente com XGBoost  
+
+O Kaggle, nesta lesson, **não usa Pipeline**, mas isso é apenas por simplicidade.
+
+Exemplo conceitual de uso de Pipeline com XGBoost:
+
+~~~python
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from xgboost import XGBRegressor
+
+pipeline = Pipeline(steps=[
+    ("preprocessor", SimpleImputer()),
+    ("model", XGBRegressor(n_estimators=300))
+])
+~~~
+
+Embora o Kaggle não utilize Pipeline nesta lesson, ele funciona perfeitamente com XGBoost.
+
+
+O importante é entender:
+
+> XGBoost é um modelo poderoso, mas depende fortemente de tuning.
+
+E a lesson introduz apenas os hiperparâmetros essenciais.
+
+</details>
+
+---
+
+## 🟪 6.9. Boas práticas e limitações
+
+<details>
+<br>
+
+### ✔ Boas práticas
+
+- usar *early stopping* sempre que possível;  
+- testar diferentes valores de `learning_rate`;  
+- começar com `n_estimators` alto e deixar o early stopping decidir;  
+- usar validação separada para tuning.
+
+### ✘ Limitações
+
+- pode ser lento em datasets muito grandes;  
+- tuning pode ser complexo;  
+- não funciona bem com dados não tabulares (imagens, texto bruto).
+
+</details>
+
+---
+
+## 🟫 6.10. Glossário Técnico
+
+<details>
+<br>
+
+- **Boosting** — técnica que combina modelos sequenciais.  
+- **Gradient Boosting** — boosting guiado pelo gradiente da loss.  
+- **XGBoost** — implementação otimizada de gradient boosting.  
+- **n_estimators** — número de árvores no ensemble.  
+- **learning_rate** — peso de cada árvore.  
+- **early_stopping_rounds** — parada antecipada baseada em validação.  
+- **n_jobs** — número de núcleos de CPU usados no treinamento.
+
+</details>
+
+---
+
+## 🧾 6.11. Referência Rápida — Conceitos‑Chave
+
+<details>
+<br>
+
+- XGBoost é um dos modelos mais fortes para dados tabulares.  
+- Gradient boosting corrige erros iterativamente.  
+- `n_estimators` controla o tamanho do ensemble.  
+- `learning_rate` controla a contribuição de cada árvore.  
+- *Early stopping* evita overfitting e economiza tempo.  
+- O modelo segue a API do scikit‑learn.
+
+</details>
+
+---
+
+## 🟧 6.12. Conclusão do Capítulo
+
+<details>
+<br>
+
+Neste capítulo, você aprendeu:
+
+- o conceito de gradient boosting,  
+- como o XGBoost implementa esse método,  
+- os hiperparâmetros essenciais,  
+- como usar *early stopping*,  
+- como integrar XGBoost ao fluxo do curso.
+
+No próximo capítulo, veremos um tema crítico:
+
+> **Data Leakage** — um dos erros mais perigosos e comuns em Machine Learning.
+
+Esse conhecimento é essencial para garantir que modelos avançados, como XGBoost, sejam avaliados corretamente.
+
+</details>
+
+</details>
+<br>
+
+
+
+# 7
