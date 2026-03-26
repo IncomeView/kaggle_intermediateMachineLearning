@@ -1945,4 +1945,349 @@ Esse conhecimento é essencial para garantir que modelos avançados, como XGBoos
 
 
 
-# 7
+# 📘 Capítulo 7 — Data Leakage  
+### *Machine Learning Intermediário — Um Guia Prático e Comentado*
+
+<details>
+<br>
+
+## 🟦 7.1. Introdução
+
+<details>
+<br>
+
+Nos capítulos anteriores, aprendemos a construir modelos robustos:
+
+- tratamos missing values,  
+- lidamos com variáveis categóricas,  
+- organizamos o fluxo com pipelines,  
+- avaliamos modelos com cross‑validation,  
+- treinamos modelos avançados com XGBoost.
+
+Essas técnicas ajudam a melhorar a qualidade do modelo.  
+Mas existe um problema que pode **destruir completamente a validade das previsões**, mesmo quando tudo parece correto:
+
+> **Data Leakage** — quando o modelo aprende informações que não estarão disponíveis no momento da predição real.
+
+O Kaggle enfatiza que este é um dos erros **mais perigosos** em Machine Learning.  
+Modelos com leakage parecem excelentes na validação, mas falham miseravelmente em produção.
+
+Este capítulo explica:
+
+- o que é leakage,  
+- por que ele acontece,  
+- como identificá‑lo,  
+- como evitá‑lo,  
+- e como o Kaggle aborda o tema na lesson final do curso.
+
+</details>
+
+---
+
+## 🟩 7.2. Revisão do fluxo anterior
+
+<details>
+<br>
+
+Até aqui, seguimos um fluxo consistente:
+
+1. Pré‑processamento (missing values, encoding)  
+2. Pipelines para organizar o fluxo  
+3. Cross‑validation para medir desempenho  
+4. Modelos avançados (XGBoost)
+
+Esse fluxo pressupõe uma separação clara entre:
+
+- **dados de treino**,  
+- **dados de validação**,  
+- **dados de teste**.
+
+Essa separação é essencial para medir desempenho real.
+
+Mas se, por descuido, informações do validation set “vazam” para o treino, ou se o modelo usa dados que só existem **depois** do evento que queremos prever, o resultado é:
+
+> **um modelo que parece ótimo, mas não funciona na prática.**
+
+É aqui que entra o Data Leakage.
+
+</details>
+
+---
+
+## 🟧 7.3. Apresentação do problema
+
+<details>
+<br>
+
+Data leakage ocorre quando o modelo tem acesso a informações que:
+
+- **não estarão disponíveis no momento da predição**, ou  
+- **pertencem ao conjunto de validação/teste**, mas influenciam o treino.
+
+O efeito imediato é:
+
+- MAE (ou acurácia) artificialmente baixo,  
+- validação enganosa,  
+- modelo inútil em produção.
+
+O Kaggle resume assim:
+
+> Leakage faz o modelo parecer preciso até você começar a usá‑lo.
+
+Existem dois tipos principais:
+
+1. **Target Leakage**  
+2. **Train‑Test Contamination**
+
+Vamos explorar cada um.
+
+</details>
+
+---
+
+## 🟨 7.4. Conceito central — Tipos de Data Leakage
+
+<details>
+<br>
+
+### 🔹 7.4.1. Target Leakage
+
+Ocorre quando o modelo usa informações que só existem **depois** do evento que queremos prever.
+
+Exemplo clássico da lesson:
+
+~~~python
+got_pneumonia | took_antibiotic_medicine
+False         | False
+True          | True
+~~~
+
+Pessoas tomam antibiótico **depois** de pegar pneumonia.  
+Se o modelo usar essa coluna, ele “adivinha” o futuro.
+
+**Regra prática:**
+
+> Se a feature é atualizada após o target ser definido, ela causa leakage.
+
+---
+
+### 🔹 7.4.2. Train‑Test Contamination
+
+Ocorre quando o validation/test influencia o pré‑processamento do treino.
+
+Exemplo:
+
+~~~python
+# ERRADO: imputador treinado com dados de treino + validação
+imputer.fit(X_full)
+X_train = imputer.transform(X_train)
+X_valid = imputer.transform(X_valid)
+~~~
+
+Isso faz o modelo aprender estatísticas do validation set, contaminando a avaliação.
+
+**Regra prática:**
+
+> Nenhum passo de pré‑processamento deve ser ajustado usando dados de validação.
+
+Pipelines ajudam a evitar esse problema.
+
+</details>
+
+---
+
+## 🟪 7.5. Exemplos conceituais com código
+
+<details>
+<br>
+
+A seguir, exemplos inspirados diretamente na lesson do Kaggle.
+
+---
+
+### 🔹 7.5.1. Exemplo 1 — Target Leakage (Pneumonia)
+
+~~~python
+# Feature problemática
+X["took_antibiotic_medicine"]
+~~~
+
+Essa coluna é atualizada **depois** do diagnóstico.  
+O modelo aprende um padrão impossível de usar no mundo real.
+
+---
+
+### 🔹 7.5.2. Exemplo 2 — Train‑Test Contamination (Imputação)
+
+~~~python
+# ERRADO
+imputer.fit(X_full)     # inclui validação
+X_train = imputer.transform(X_train)
+X_valid = imputer.transform(X_valid)
+~~~
+
+O imputador aprende a média de colunas usando dados que deveriam ser desconhecidos.
+
+---
+
+### 🔹 7.5.3. Exemplo 3 — Correção com Pipeline
+
+~~~python
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.ensemble import RandomForestClassifier
+
+pipeline = Pipeline(steps=[
+    ("imputer", SimpleImputer()),
+    ("model", RandomForestClassifier())
+])
+~~~
+
+O pipeline garante que:
+
+- `fit()` usa apenas dados de treino  
+- `transform()` é aplicado corretamente no validation  
+
+---
+
+### 🔹 7.5.4. Exemplo 4 — Detectando Leakage em Features
+
+~~~python
+# Comparando distribuição de uma feature entre classes
+expenditures_cardholders = X.expenditure[y]
+expenditures_noncardholders = X.expenditure[~y]
+
+(expenditures_noncardholders == 0).mean()
+(expenditures_cardholders == 0).mean()
+~~~
+
+Se uma feature separa perfeitamente as classes, pode ser leakage.
+
+---
+
+### 🔹 7.5.5. Exemplo 5 — Removendo Features com Leakage
+
+~~~python
+potential_leaks = ['expenditure', 'share', 'active', 'majorcards']
+X_clean = X.drop(potential_leaks, axis=1)
+~~~
+
+Remover features suspeitas é uma prática comum.
+
+</details>
+
+---
+
+## 🟫 7.6. Integração com capítulos anteriores
+
+<details>
+<br>
+
+Data Leakage se conecta diretamente com tudo o que aprendemos:
+
+### ✔ Missing Values  
+Imputação deve ser ajustada **somente** com dados de treino.
+
+### ✔ Categorical Variables  
+Encoders não podem ser ajustados com dados de validação.
+
+### ✔ Pipelines  
+Pipelines evitam train‑test contamination automaticamente.
+
+### ✔ Cross‑Validation  
+Pré‑processamento deve ocorrer **dentro** do pipeline para cada fold.
+
+### ✔ XGBoost  
+Mesmo modelos avançados falham completamente se houver leakage.
+
+O capítulo reforça a importância de um fluxo limpo e bem definido.
+
+</details>
+
+---
+
+## 🟩 7.7. Boas práticas e limitações
+
+<details>
+<br>
+
+### ✔ Boas práticas
+
+- Verifique se alguma feature é atualizada após o target.  
+- Use pipelines para evitar contaminação.  
+- Desconfie de modelos com desempenho “perfeito”.  
+- Analise estatísticas suspeitas (ex.: separação perfeita).  
+- Remova features que dependem do futuro.
+
+### ✘ Limitações
+
+- Leakage nem sempre é óbvio.  
+- Requer conhecimento do domínio.  
+- Nem sempre é possível identificar a origem exata.  
+- Pode ocorrer mesmo com pipelines, se as features forem mal definidas.
+
+</details>
+
+---
+
+## 🟪 7.8. Glossário técnico
+
+<details>
+<br>
+
+- **Data Leakage** — vazamento de informação entre treino e validação.  
+- **Target Leakage** — uso de informações que só existem após o target.  
+- **Train‑Test Contamination** — pré‑processamento influenciado pelo validation.  
+- **Pipeline** — estrutura que garante separação correta entre treino e validação.  
+- **Feature Suspeita** — variável que separa classes de forma “perfeita”.  
+
+</details>
+
+---
+
+## 🧾 7.9. Referência rápida
+
+<details>
+<br>
+
+- Leakage destrói a validade do modelo.  
+- Existem dois tipos: target leakage e train‑test contamination.  
+- Pipelines ajudam, mas não resolvem tudo.  
+- Features que dependem do futuro devem ser removidas.  
+- Validações perfeitas são sinal de alerta.  
+
+</details>
+
+---
+
+## 🟧 7.10. Conclusão do capítulo
+
+<details>
+<br>
+
+Data Leakage é um dos problemas mais perigosos em Machine Learning.  
+Ele não gera erros explícitos — ele gera **modelos enganosamente bons**.
+
+Neste capítulo, você aprendeu:
+
+- o que é leakage,  
+- como ele surge,  
+- como identificá‑lo,  
+- como evitá‑lo,  
+- e como o Kaggle aborda o tema.
+
+Com isso, você conclui o ciclo completo do curso:
+
+- pré‑processamento,  
+- pipelines,  
+- validação,  
+- modelos avançados,  
+- e agora, **boas práticas essenciais** para evitar erros críticos.
+
+O próximo passo é aplicar esse conhecimento em projetos reais e competições.
+
+Parabéns por chegar até aqui.
+
+</details>
+
+</details>
