@@ -6,6 +6,7 @@
 > de cada capítulo, servindo como material teórico complementar aos notebooks práticos.
 
 ---
+
 <br>
 
 # 📘 Capítulo 1 — Introduction
