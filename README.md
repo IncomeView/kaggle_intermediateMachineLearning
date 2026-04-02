@@ -1,5 +1,5 @@
-# 📘 **README — Kaggle Intermediate Machine Learning (Estudo + Companion Book)**  
-### *Repositório oficial de estudos, notebooks e livro complementar do curso Kaggle Intermediate Machine Learning*
+## 📘 **README — Kaggle Intermediate Machine Learning (Estudo + Companion Book)**  
+#### *Repositório oficial de estudos, notebooks e livro complementar do curso Kaggle Intermediate Machine Learning*
 
 Bem‑vindo ao repositório que documenta **todo o processo de estudo**, prática e produção teórica do curso **Kaggle Intermediate Machine Learning**.  
 Aqui você encontra:
@@ -14,7 +14,7 @@ Este repositório foi construído para ser **portfólio**, **material de referê
 
 ---
 
-# 🧭 **1. Objetivo do Repositório**
+## 🧭 **1. Objetivo do Repositório**
 
 Este repositório consolida:
 
@@ -28,7 +28,7 @@ O foco é **entender profundamente o raciocínio do Kaggle**, não apenas execut
 
 ---
 
-# 📚 **2. Companion Book — “Machine Learning Intermediário: Guia Prático e Comentado”**
+## 📚 **2. Companion Book — “Machine Learning Intermediário: Guia Prático e Comentado”**
 
 O livro acompanha o curso e explica:
 
@@ -62,7 +62,7 @@ docs/intermediateMachineLearning_book.md
 
 ---
 
-# 🧪 **3. Notebooks do Estudo**
+## 🧪 **3. Notebooks do Estudo**
 
 Os notebooks seguem a sequência do curso:
 
@@ -87,7 +87,7 @@ Cada notebook contém:
 
 ---
 
-# 🏗️ **4. Estrutura do Projeto**
+## 🏗️ **4. Estrutura do Projeto**
 
 ```
 ml/
@@ -108,7 +108,7 @@ ml/
 
 ---
 
-# 🧠 **5. Processo de Estudo**
+## 🧠 **5. Processo de Estudo**
 
 O estudo segue um fluxo estruturado:
 
@@ -128,7 +128,7 @@ Esse processo garante:
 
 ---
 
-# ✍️ **6. Padrão Editorial para Novos Livros e Capítulos**
+## ✍️ **6. Padrão Editorial para Novos Livros e Capítulos**
 
 Todo novo conteúdo técnico segue o **PROMPT MESTRE**, que define:
 
@@ -146,7 +146,7 @@ Esse padrão garante consistência e qualidade profissional.
 
 ---
 
-# 🧩 **7. Tecnologias Utilizadas**
+## 🧩 **7. Tecnologias Utilizadas**
 
 - Python  
 - Pandas  
@@ -159,7 +159,7 @@ Esse padrão garante consistência e qualidade profissional.
 
 ---
 
-# 🧪 **8. Como Reproduzir o Ambiente**
+## 🧪 **8. Como Reproduzir o Ambiente**
 
 Instale as dependências:
 
@@ -175,7 +175,7 @@ jupyter notebook
 
 ---
 
-# 🧵 **9. Contribuição e Evolução**
+## 🧵 **9. Contribuição e Evolução**
 
 Este repositório é vivo.  
 A cada novo estudo, capítulo ou curso, novos conteúdos serão adicionados seguindo o padrão editorial.
@@ -193,7 +193,7 @@ A cada novo estudo, capítulo ou curso, novos conteúdos serão adicionados segu
 
 ---
 
-# 🚀 **11. Próximos Passos**
+## 🚀 **11. Próximos Passos**
 
 - Criar capítulos 5, 6 e 7 do Companion Book  
 - Iniciar o próximo livro da trilha de Machine Learning  
@@ -202,7 +202,7 @@ A cada novo estudo, capítulo ou curso, novos conteúdos serão adicionados segu
 
 ---
 
-# 🤝 **12. Autor**
+## 🤝 **12. Autor**
 
 **Moacir**  
 Estudo contínuo em Machine Learning, Data Science e Engenharia de Dados.  
