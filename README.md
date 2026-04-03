@@ -1,4 +1,6 @@
-## 📘 **README — Kaggle Intermediate Machine Learning (Estudo + Companion Book)**  
+<br>
+
+## 📘 **Kaggle Intermediate Machine Learning (Estudo + Companion Book)**  
 #### *Repositório oficial de estudos, notebooks e livro complementar do curso Kaggle Intermediate Machine Learning*
 
 Bem‑vindo ao repositório que documenta **todo o processo de estudo**, prática e produção teórica do curso **Kaggle Intermediate Machine Learning**.  
@@ -12,9 +14,8 @@ Aqui você encontra:
 
 Este repositório foi construído para ser **portfólio**, **material de referência** e **base de estudos contínuos**.
 
----
-
-## 🧭 **1. Objetivo do Repositório**
+<br><br>
+## 🧭 **Objetivo do Repositório**
 
 Este repositório consolida:
 
@@ -26,9 +27,8 @@ Este repositório consolida:
 
 O foco é **entender profundamente o raciocínio do Kaggle**, não apenas executar código.
 
----
-
-## 📚 **2. Companion Book — “Machine Learning Intermediário: Guia Prático e Comentado”**
+<br><br>
+## 📚 **Companion Book — “Machine Learning Intermediário: Guia Prático e Comentado”**
 
 O livro acompanha o curso e explica:
 
@@ -60,9 +60,8 @@ O Companion Book está disponível em:
 docs/intermediateMachineLearning_book.md
 ```
 
----
-
-## 🧪 **3. Notebooks do Estudo**
+<br><br>
+## 🧪 **Notebooks do Estudo**
 
 Os notebooks seguem a sequência do curso:
 
@@ -85,9 +84,8 @@ Cada notebook contém:
 - validação com MAE  
 - integração com pipelines  
 
----
-
-## 🏗️ **4. Estrutura do Projeto**
+<br><br>
+## 🏗️ **Estrutura do Projeto**
 
 ```
 ml/
@@ -106,9 +104,8 @@ ml/
         └── README.md         # este arquivo
 ```
 
----
-
-## 🧠 **5. Processo de Estudo**
+<br><br>
+## 🧠 **Processo de Estudo**
 
 O estudo segue um fluxo estruturado:
 
@@ -126,9 +123,8 @@ Esse processo garante:
 - documentação contínua  
 - evolução do conhecimento  
 
----
-
-## ✍️ **6. Padrão Editorial para Novos Livros e Capítulos**
+<br><br>
+## ✍️ **Padrão Editorial para Novos Livros e Capítulos**
 
 Todo novo conteúdo técnico segue o **PROMPT MESTRE**, que define:
 
@@ -144,9 +140,8 @@ Todo novo conteúdo técnico segue o **PROMPT MESTRE**, que define:
 
 Esse padrão garante consistência e qualidade profissional.
 
----
-
-## 🧩 **7. Tecnologias Utilizadas**
+<br><br>
+## 🧩 **Tecnologias Utilizadas**
 
 - Python  
 - Pandas  
@@ -157,9 +152,8 @@ Esse padrão garante consistência e qualidade profissional.
 - RandomForestRegressor  
 - MAE (Mean Absolute Error)  
 
----
-
-## 🧪 **8. Como Reproduzir o Ambiente**
+<br><br>
+## 🧪 **Como Reproduzir o Ambiente**
 
 Instale as dependências:
 
@@ -173,39 +167,33 @@ Execute os notebooks:
 jupyter notebook
 ```
 
----
-
-## 🧵 **9. Contribuição e Evolução**
+<br><br>
+## 🧵 **Contribuição e Evolução**
 
 Este repositório é vivo.  
 A cada novo estudo, capítulo ou curso, novos conteúdos serão adicionados seguindo o padrão editorial.
 
----
-
-# 🏁 **10. Status Atual do Projeto**
+<br><br>
+# 🏁 **Status Atual do Projeto**
 
 ✔ Companion Book — capítulos 1 a 4 concluídos  
 ✔ Notebooks — sequência completa criada  
 ✔ Estrutura do projeto — organizada  
 ✔ Padrão editorial — definido  
-⬜ Próximos capítulos — em produção  
-⬜ Novo livro — aguardando início  
 
----
-
-## 🚀 **11. Próximos Passos**
+<br><br>
+## 🚀 **Próximos Passos**
 
 - Criar capítulos 5, 6 e 7 do Companion Book  
 - Iniciar o próximo livro da trilha de Machine Learning  
 - Expandir o repositório com novos cursos Kaggle  
 - Criar materiais avançados (Feature Engineering, ML Avançado, etc.)
 
----
-
-## 🤝 **12. Autor**
+<br><br>
+## 🤝 **Autor**
 
 **Moacir**  
 Estudo contínuo em Machine Learning, Data Science e Engenharia de Dados.  
 Este repositório documenta sua jornada técnica e serve como portfólio profissional.
 
----
+<br><br>
